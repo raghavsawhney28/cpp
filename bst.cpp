@@ -1,81 +1,184 @@
-// bst.cpp
-#include <bits/stdc++.h>
+#include <iostream>
 using namespace std;
 
 struct Node {
-    int key;
+    int data;
     Node* left;
     Node* right;
-    Node(int k): key(k), left(nullptr), right(nullptr) {}
 };
 
-Node* insert(Node* root,int key){
-    if(!root) return new Node(key);
-    if(key < root->key) root->left = insert(root->left,key);
-    else if(key > root->key) root->right = insert(root->right,key);
-    // duplicates ignored
+// Function to create a new node
+Node* createNode(int value) {
+    Node* newNode = new Node();
+    newNode->data = value;
+    newNode->left = newNode->right = nullptr;
+    return newNode;
+}
+
+// Insertion in BST
+Node* insertNode(Node* root, int value) {
+    if (root == nullptr)
+        return createNode(value);
+    if (value < root->data)
+        root->left = insertNode(root->left, value);
+    else if (value > root->data)
+        root->right = insertNode(root->right, value);
     return root;
 }
 
-Node* minNode(Node* n){ while(n && n->left) n=n->left; return n; }
+// Find minimum node (used in deletion)
+Node* findMin(Node* root) {
+    while (root && root->left)
+        root = root->left;
+    return root;
+}
 
-Node* deleteNode(Node* root, int key){
-    if(!root) return root;
-    if(key < root->key) root->left = deleteNode(root->left, key);
-    else if(key > root->key) root->right = deleteNode(root->right, key);
-    else{
-        if(!root->left){
-            Node* r = root->right; delete root; return r;
-        } else if(!root->right){
-            Node* l = root->left; delete root; return l;
-        } else {
-            Node* succ = minNode(root->right);
-            root->key = succ->key;
-            root->right = deleteNode(root->right, succ->key);
+// Deletion in BST
+Node* deleteNode(Node* root, int key) {
+    if (root == nullptr)
+        return root;
+
+    if (key < root->data)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->data)
+        root->right = deleteNode(root->right, key);
+    else {
+        // Node with one or no child
+        if (root->left == nullptr) {
+            Node* temp = root->right;
+            delete root;
+            return temp;
+        } else if (root->right == nullptr) {
+            Node* temp = root->left;
+            delete root;
+            return temp;
+        }
+        // Node with two children
+        Node* temp = findMin(root->right);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+    return root;
+}
+
+// Searching in BST
+bool search(Node* root, int key) {
+    if (root == nullptr)
+        return false;
+    if (root->data == key)
+        return true;
+    else if (key < root->data)
+        return search(root->left, key);
+    else
+        return search(root->right, key);
+}
+
+// Traversals
+void inorder(Node* root) {
+    if (root != nullptr) {
+        inorder(root->left);
+        cout << root->data << " ";
+        inorder(root->right);
+    }
+}
+
+void preorder(Node* root) {
+    if (root != nullptr) {
+        cout << root->data << " ";
+        preorder(root->left);
+        preorder(root->right);
+    }
+}
+
+void postorder(Node* root) {
+    if (root != nullptr) {
+        postorder(root->left);
+        postorder(root->right);
+        cout << root->data << " ";
+    }
+}
+
+// Find Kth smallest element
+void kthSmallest(Node* root, int &k, int &result) {
+    if (root == nullptr)
+        return;
+    kthSmallest(root->left, k, result);
+    if (--k == 0) {
+        result = root->data;
+        return;
+    }
+    kthSmallest(root->right, k, result);
+}
+
+// ------------------------
+// Main menu
+// ------------------------
+int main() {
+    Node* root = nullptr;
+    int choice, val, k, result;
+
+    while (true) {
+        cout << "\n===== BINARY SEARCH TREE MENU =====\n";
+        cout << "1. Insert\n";
+        cout << "2. Delete\n";
+        cout << "3. Search\n";
+        cout << "4. Traversals\n";
+        cout << "5. Kth Smallest Element\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter value to insert: ";
+                cin >> val;
+                root = insertNode(root, val);
+                cout << "Inserted.\n";
+                break;
+
+            case 2:
+                cout << "Enter value to delete: ";
+                cin >> val;
+                root = deleteNode(root, val);
+                cout << "Deleted if found.\n";
+                break;
+
+            case 3:
+                cout << "Enter value to search: ";
+                cin >> val;
+                if (search(root, val))
+                    cout << "Value found in BST.\n";
+                else
+                    cout << "Value not found.\n";
+                break;
+
+            case 4:
+                cout << "Inorder (Sorted): ";
+                inorder(root);
+                cout << "\nPreorder: ";
+                preorder(root);
+                cout << "\nPostorder: ";
+                postorder(root);
+                cout << endl;
+                break;
+
+            case 5:
+                cout << "Enter k (for Kth smallest): ";
+                cin >> k;
+                result = -1;
+                kthSmallest(root, k, result);
+                if (result != -1)
+                    cout << "Kth smallest element: " << result << endl;
+                else
+                    cout << "Less than k elements in tree.\n";
+                break;
+
+            case 6:
+                cout << "Exiting...\n";
+                return 0;
+
+            default:
+                cout << "Invalid choice! Try again.\n";
         }
     }
-    return root;
-}
-
-bool search(Node* root, int key){
-    if(!root) return false;
-    if(root->key==key) return true;
-    return key < root->key ? search(root->left,key) : search(root->right,key);
-}
-
-void inorder(Node* root, vector<int>& out){
-    if(!root) return;
-    inorder(root->left,out);
-    out.push_back(root->key);
-    inorder(root->right,out);
-}
-void preOrder(Node* root){ if(!root) return; cout<<root->key<<" "; preOrder(root->left); preOrder(root->right); }
-void postOrder(Node* root){ if(!root) return; postOrder(root->left); postOrder(root->right); cout<<root->key<<" "; }
-
-int kthSmallest(Node* root,int k){
-    vector<int> arr; inorder(root,arr);
-    if(k<=0 || k> (int)arr.size()) throw runtime_error("k out of range");
-    return arr[k-1];
-}
-
-int main(){
-    Node* root = nullptr;
-    int choice;
-    while(true){
-        cout<<"\n--- BST MENU ---\n1.Insert\n2.Delete\n3.Search\n4.Display (in/pre/post)\n5.K-th smallest\n0.Exit\nChoice: ";
-        if(!(cin>>choice)) break;
-        if(choice==0) break;
-        if(choice==1){ int x; cout<<"Insert: "; cin>>x; root = insert(root,x); }
-        else if(choice==2){ int x; cout<<"Delete: "; cin>>x; root = deleteNode(root,x); }
-        else if(choice==3){ int x; cout<<"Search: "; cin>>x; cout<<(search(root,x)?"Found\n":"Not Found\n"); }
-        else if(choice==4){
-            cout<<"Inorder: "; vector<int> v; inorder(root,v); for(int a:v) cout<<a<<" "; cout<<"\n";
-            cout<<"Preorder: "; preOrder(root); cout<<"\n";
-            cout<<"Postorder: "; postOrder(root); cout<<"\n";
-        } else if(choice==5){
-            int k; cout<<"k: "; cin>>k;
-            try{ cout<<kthSmallest(root,k)<<"\n"; } catch(exception& e){ cout<<e.what()<<"\n"; }
-        } else cout<<"Invalid\n";
-    }
-    return 0;
 }
